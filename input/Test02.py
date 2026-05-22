@@ -56,7 +56,7 @@ PRIVATE_KEY = "-----BEGIN RSA PRIVATE KEY-----\nMII..."
 db["passwd"] = "db_password_123"
 # → el target textual completo contiene "passwd"
 
-# ------------------- ✅ NO DEBERÍAN GENERAR ALARMA -------------------
+# ------------------- NO DEBERÍAN GENERAR ALARMA -------------------
 
 # 1. Valor vacío o demasiado corto
 password = ""
