@@ -13,8 +13,8 @@ import java.util.stream.Collectors;
 public class RulesListener {
 
     private final List<AnalysisRule> rules = List.of(
-            new HardcodedCredentialsRule()
-//            new SqlInjectionRule(),
+            new HardcodedCredentialsRule(),
+            new CyclomaticComplexityRule()
     );
 
     public void analyze(ParseTree tree) {
