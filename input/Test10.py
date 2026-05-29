@@ -22,6 +22,9 @@ Este archivo contiene un ejemplo robusto que ejercita todas las reglas actuales:
    Detecta yaml.load(), yaml.full_load() y yaml.unsafe_load() cuando no se usa
    safe_load() o un SafeLoader explicito.
 
+6. InsecureCookieConfig:
+   Detecta cookies creadas sin HttpOnly, Secure o SameSite.
+
 El archivo tambien incluye ejemplos seguros para evidenciar contraste: SQL
 parametrizado, JSON para datos externos y pickle usado solo con datos internos
 controlados.
@@ -167,6 +170,25 @@ def cargar_yaml_seguro_loader(path):
     file_obj = open(path, "r")
     contenido = file_obj.read()
     return yaml.load(contenido, Loader=yaml.SafeLoader)
+
+
+# ---------------------------------------------------------------------------
+# InsecureCookieConfig - casos vulnerables y seguros
+# ---------------------------------------------------------------------------
+
+def emitir_cookie_vulnerable(response, token):
+    response.set_cookie("session", token)
+    return response
+
+
+def emitir_cookie_vulnerable_parcial(response, token):
+    response.set_cookie("session", token, httponly=True, secure=True)
+    return response
+
+
+def emitir_cookie_segura(response, token):
+    response.set_cookie("session", token, httponly=True, secure=True, samesite="Lax")
+    return response
 
 
 # ---------------------------------------------------------------------------

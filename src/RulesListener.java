@@ -17,6 +17,7 @@ public class RulesListener {
             new SQLInjectionConcatRule(),
             new InsecureDeserializationPickleRule(),
             new InsecureYamlLoadRule(),
+            new InsecureCookieConfigRule(),
             new CyclomaticComplexityRule()
     );
 
