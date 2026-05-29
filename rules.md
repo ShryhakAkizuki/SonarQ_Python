@@ -426,15 +426,3 @@ configuracion, logging y exposicion de secretos.
     `Strict-Transport-Security`.
 48. **InsecureDependencyDownload:** detecta descargas de ejecutables, scripts o
     dependencias por HTTP o sin verificacion de integridad.
-
-### Priorizacion sugerida
-
-Para continuar el proyecto, conviene priorizar primero reglas con alto impacto y
-patrones faciles de detectar en AST:
-
-1. `UnsafeEvalExec`
-2. `ShellInjection`
-3. `SecretInLogs`
-4. `DebugModeEnabled`
-5. `MissingCSRFProtection`
-6. `XMLExternalEntity`
