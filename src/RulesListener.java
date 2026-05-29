@@ -15,6 +15,7 @@ public class RulesListener {
     private final List<AnalysisRule> rules = List.of(
             new HardcodedCredentialsRule(),
             new SQLInjectionConcatRule(),
+            new InsecureDeserializationPickleRule(),
             new CyclomaticComplexityRule()
     );
 
