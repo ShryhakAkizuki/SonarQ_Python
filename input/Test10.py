@@ -18,6 +18,10 @@ Este archivo contiene un ejemplo robusto que ejercita todas las reglas actuales:
    Detecta funciones con complejidad ciclomatica elevada y exceso de
    parametros.
 
+5. InsecureYamlLoad:
+   Detecta yaml.load(), yaml.full_load() y yaml.unsafe_load() cuando no se usa
+   safe_load() o un SafeLoader explicito.
+
 El archivo tambien incluye ejemplos seguros para evidenciar contraste: SQL
 parametrizado, JSON para datos externos y pickle usado solo con datos internos
 controlados.
@@ -27,6 +31,7 @@ import json
 import pickle
 import socket
 import sqlite3
+import yaml
 from flask import request
 
 
@@ -136,6 +141,32 @@ def unpickler_vulnerable(path):
     file_obj = open(path, "rb")
     loader = pickle.Unpickler(file_obj)
     return loader.load()
+
+
+# ---------------------------------------------------------------------------
+# InsecureYamlLoad - casos vulnerables y seguros
+# ---------------------------------------------------------------------------
+
+def cargar_yaml_vulnerable_http():
+    contenido = request.get_data()
+    return yaml.load(contenido)
+
+
+def cargar_yaml_full_load_vulnerable(path):
+    file_obj = open(path, "r")
+    contenido = file_obj.read()
+    return yaml.full_load(contenido)
+
+
+def cargar_yaml_seguro_http():
+    contenido = request.get_data()
+    return yaml.safe_load(contenido)
+
+
+def cargar_yaml_seguro_loader(path):
+    file_obj = open(path, "r")
+    contenido = file_obj.read()
+    return yaml.load(contenido, Loader=yaml.SafeLoader)
 
 
 # ---------------------------------------------------------------------------
