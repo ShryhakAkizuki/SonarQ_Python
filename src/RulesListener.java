@@ -14,6 +14,27 @@ public class RulesListener {
 
     private final List<AnalysisRule> rules = List.of(
             new HardcodedCredentialsRule(),
+            new SQLInjectionConcatRule(),
+            new InsecureDeserializationPickleRule(),
+            new InsecureYamlLoadRule(),
+            new InsecureCookieConfigRule(),
+            new WeakHashAlgorithmRule(),
+            new InsecureRandomForSecretsRule(),
+            new WeakCryptographyModeRule(),
+            new HardcodedCryptoKeyRule(),
+            new InsecurePasswordHashingRule(),
+            new JWTWeakConfigurationRule(),
+            new TLSVerificationDisabledRule(),
+            new InsecureHttpUsageRule(),
+            new RequestsWithoutTimeoutRule(),
+            new BasicAuthOverHttpRule(),
+            new OpenRedirectRule(),
+            new PathTraversalRule(),
+            new FileOverwriteRiskRule(),
+            new InsecureTempFileUsageRule(),
+            new UnsafeArchiveExtractionRule(),
+            new UnsafeFilePermissionsRule(),
+            new DangerousFileDeleteRule(),
             new CyclomaticComplexityRule()
     );
 
