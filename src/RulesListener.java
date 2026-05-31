@@ -1,3 +1,4 @@
+import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 
@@ -35,11 +36,26 @@ public class RulesListener {
             new UnsafeArchiveExtractionRule(),
             new UnsafeFilePermissionsRule(),
             new DangerousFileDeleteRule(),
-            new CyclomaticComplexityRule()
+            new CyclomaticComplexityRule(),
+            new LongMethodRule(),
+            new MagicNumbersRule(),
+            new TodoCommentsRule(),
+            new DeepNestingRule(),
+            new CodeDuplicationRule(),
+            new LongParameterListRule(),
+            new GlobalVariableRule(),
+            new UnusedImportsRule(),
+            new DeadCodeRule()
     );
 
-    public void analyze(ParseTree tree) {
-        rules.forEach(r -> ParseTreeWalker.DEFAULT.walk(r, tree));
+    public void analyze(ParseTree tree, CommonTokenStream tokens) {
+        for (AnalysisRule r : rules) {
+            // TodoCommentsRule necesita acceso a los tokens para leer comentarios
+            if (r instanceof TodoCommentsRule) {
+                ((TodoCommentsRule) r).setTokenStream(tokens);
+            }
+            ParseTreeWalker.DEFAULT.walk(r, tree);
+        }
     }
 
     private List<Issue> issues() {
@@ -58,6 +74,7 @@ public class RulesListener {
         System.out.println(SEP);
         if (issues.isEmpty()) {
             System.out.println("OK: Sin incidencias detectadas.");
+            System.out.println("Deuda técnica total: 0min");
         } else {
             issues.forEach(i -> System.out.println("  " + i));
             System.out.println(SEP);
@@ -69,6 +86,12 @@ public class RulesListener {
                     .filter(counts::containsKey)
                     .forEach(s -> System.out.print(s + ": " + counts.get(s) + "  "));
             System.out.println();
+            
+            // Calcular deuda técnica total
+            int totalMinutes = issues.stream()
+                    .mapToInt(Issue::getEstimatedMinutes)
+                    .sum();
+            System.out.println("  Deuda técnica total: " + Issue.formatMinutesToTime(totalMinutes));
         }
         System.out.println(SEP);
         // Exit code: 1 si hay CRITICAL o HIGH, 0 si no
