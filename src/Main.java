@@ -45,7 +45,7 @@ public class Main {
 
         // Analisis del codigo
         var listener = new RulesListener();
-        listener.analyze(tree);
+        listener.analyze(tree, tokens);
         System.exit(listener.report());
     }
 }
