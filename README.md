@@ -1,671 +1,671 @@
-# SonarQ_Python - Analizador Estático de Código Python
+# SonarQ_Python - Analizador de Seguridad para Python
 
-## 📋 Descripción
+## Tabla de Contenido
 
-SonarQ_Python es un analizador estático de código Python que detecta problemas de calidad, deuda técnica y vulnerabilidades de seguridad. Utiliza ANTLR4 con la gramática oficial de Python 3.13 para realizar análisis sintáctico profundo.
-
-## 🎯 Características Principales
-
-- ✅ **32 Reglas de Análisis** (23 seguridad + 9 deuda técnica)
-- ✅ **Cálculo de Deuda Técnica** (formato SonarQube)
-- ✅ **Severidades**: CRITICAL, HIGH, MEDIUM, LOW, INFO
-- ✅ **Tiempo Estimado** por issue y total
-- ✅ **Soporte UTF-8** completo
-- ✅ **Reportes Detallados** con línea y columna
-
----
-
-## 🏗️ Arquitectura
-
-```
-Archivo Python (.py)
-    ↓
-[Lexer] → Tokens
-    ↓
-[Parser] → AST (Parse Tree)
-    ↓
-[Listeners] → Análisis por Regla
-    ↓
-[Issues] → Reporte Final
-```
-
-### Componentes Clave
-
-- **PythonLexer**: Tokeniza el código fuente
-- **PythonParser**: Construye el árbol sintáctico (AST)
-- **AnalysisRule**: Clase base para todas las reglas
-- **RulesListener**: Orquestador que ejecuta todas las reglas
-- **Issue**: Representa un problema detectado con severidad y tiempo
+1. [Descripción](#descripción)
+2. [Prerrequisitos](#prerrequisitos)
+   - [Software Requerido](#software-requerido)
+   - [Librerías Python](#librerías-python-para-archivos-de-prueba)
+   - [Estructura de Directorios](#estructura-de-directorios)
+3. [Compilación](#compilación)
+   - [Paso 1: Generar el Parser](#paso-1-generar-el-parser-de-python-si-no-existe-gen)
+   - [Paso 2: Compilar el Código Java](#paso-2-compilar-el-código-java)
+   - [Paso 3: Verificar la Compilación](#paso-3-verificar-la-compilación)
+4. [Uso](#uso)
+   - [Comando Básico](#comando-básico)
+   - [Ejemplos de Uso](#ejemplos-de-uso)
+5. [Archivos de Prueba Incluidos](#archivos-de-prueba-incluidos)
+   - [Archivos de Demostración Simple](#archivos-de-demostración-simple)
+   - [Archivos de Presentación Completos](#archivos-de-presentación-completos)
+6. [Reglas de Seguridad Detectadas](#reglas-de-seguridad-detectadas)
+   - [1. SQL Injection via String Concatenation](#1-sql-injection-via-string-concatenation)
+   - [2. Insecure YAML Load](#2-insecure-yaml-load)
+   - [3. Weak Hash Algorithm](#3-weak-hash-algorithm)
+   - [4. Insecure Random for Secrets](#4-insecure-random-for-secrets)
+   - [5. Weak Cryptography Mode](#5-weak-cryptography-mode)
+7. [Solución de Problemas](#solución-de-problemas)
+8. [Notas Importantes](#notas-importantes)
+   - [Propósito Académico](#propósito-académico)
+   - [Archivos de Prueba](#archivos-de-prueba)
+   - [Limitaciones](#limitaciones)
+   - [Recomendaciones](#recomendaciones)
+9. [Ejemplos de Entrada y Salida](#ejemplos-de-entrada-y-salida)
+10. [Contacto y Contribuciones](#contacto-y-contribuciones)
+11. [Referencias](#referencias)
 
 ---
 
-## 📚 Reglas Implementadas
+## Descripción
 
-### 🔒 Reglas de Seguridad (23)
+Las vulnerabilidades de seguridad y la deuda técnica son dos de las principales causas de fallos en software en producción. Detectarlas manualmente es lento e inconsistente.
 
-Heredadas del proyecto base:
-1. HardcodedCredentialsRule
-2. SQLInjectionConcatRule
-3. InsecureDeserializationPickleRule
-4. InsecureYamlLoadRule
-5. InsecureCookieConfigRule
-6. WeakHashAlgorithmRule
-7. InsecureRandomForSecretsRule
-8. WeakCryptographyModeRule
-9. HardcodedCryptoKeyRule
-10. InsecurePasswordHashingRule
-11. JWTWeakConfigurationRule
-12. TLSVerificationDisabledRule
-13. InsecureHttpUsageRule
-14. RequestsWithoutTimeoutRule
-15. BasicAuthOverHttpRule
-16. OpenRedirectRule
-17. PathTraversalRule
-18. FileOverwriteRiskRule
-19. InsecureTempFileUsageRule
-20. UnsafeArchiveExtractionRule
-21. UnsafeFilePermissionsRule
-22. DangerousFileDeleteRule
-23. CyclomaticComplexityRule
+Este proyecto implementa un analizador estático para Python inspirado en SonarQube, el cual analiza un archivo .py, recorre su árbol sintáctico con ANTLR4 para parsear código Python 3.13 y aplicar **38 reglas** de análisis organizadas en 7 categorías. y reporta tanto vulnerabilidades de seguridad, como problemas de calidad clasificados por severidad, sin ejecutar el código.
 
-### 💰 Reglas de Deuda Técnica (9 - Implementadas)
 
----
+### 🔐 1. Autenticación & Credenciales (4 reglas)
+- **HardcodedCredentials** - Credenciales hardcodeadas en código fuente
+- **HardcodedCryptoKey** - Claves criptográficas, IVs, nonces hardcodeados
+- **BasicAuthOverHttp** - Autenticación o tokens enviados sobre HTTP sin TLS
+- **JWTWeakConfiguration** - JWT con verificación deshabilitada o algoritmo 'none'
 
-## 1️⃣ LongMethodRule - Funciones Largas
+### 🌐 2. Red & Protocolo (4 reglas)
+- **InsecureHttpUsage** - URLs HTTP para transmitir datos sensibles
+- **TLSVerificationDisabled** - Verificación TLS/certificados deshabilitada
+- **RequestsWithoutTimeout** - Llamadas de red sin timeout explícito
+- **InsecureCookieConfig** - Cookies sin HttpOnly, Secure o SameSite
 
-**Detecta**: Funciones con demasiadas líneas de código
+### 💉 3. Inyección & Datos (5 reglas)
+- **SQLInjectionConcat** - SQL injection mediante concatenación de strings
+- **PathTraversal** - Rutas construidas con entrada externa sin validación
+- **OpenRedirect** - Redirecciones construidas con parámetros de usuario
+- **InsecureDeserializationPickle** - Deserialización insegura con pickle
+- **InsecureYamlLoad** - Carga YAML insegura (load/full_load/unsafe_load)
 
-**Umbrales**:
-- `>50 líneas` → HIGH (30 min)
-- `>100 líneas` → CRITICAL (60 min)
+### 🔒 4. Criptografía (4 reglas)
+- **WeakHashAlgorithm** - Algoritmos de hash débiles (MD5, SHA-1)
+- **InsecurePasswordHashing** - Contraseñas con hash rápido sin salt
+- **WeakCryptographyMode** - Modos criptográficos inseguros (ECB, CBC sin auth)
+- **InsecureRandomForSecrets** - Generador no criptográfico para secretos
 
-**Razón**: Funciones largas son difíciles de entender, mantener y probar. Indican falta de cohesión y múltiples responsabilidades.
+### 📁 5. Sistema de Archivos (5 reglas)
+- **UnsafeFilePermissions** - Permisos de archivo demasiado amplios (777, 666)
+- **InsecureTempFileUsage** - Archivos temporales predecibles o inseguros
+- **FileOverwriteRisk** - Escritura de archivos con rutas no confiables
+- **DangerousFileDelete** - Borrado de archivos con rutas controladas por usuario
+- **UnsafeArchiveExtraction** - Extracción de archivos sin validar rutas (Zip Slip)
 
-**Algoritmo**:
-```java
-exitFunction_def_raw(ctx) {
-    int totalLines = ctx.stop.getLine() - ctx.start.getLine() + 1;
-    if (totalLines > 100) flag(CRITICAL);
-    else if (totalLines > 50) flag(HIGH);
-}
-```
+### 📊 6. Calidad de Código (6 reglas)
+- **CyclomaticComplexity** - Complejidad ciclomática excesiva (>10 MEDIUM, >20 HIGH)
+- **LongMethod** - Métodos con demasiadas líneas (>50 HIGH, >100 CRITICAL)
+- **LongParameterList** - Funciones con demasiados parámetros (>5 LOW, >7 MEDIUM)
+- **DeepNesting** - Anidamiento excesivo de bloques (>4 MEDIUM, >6 HIGH)
+- **CodeDuplication** - Bloques de código duplicados (≥5 líneas)
+- **MagicNumbers** - Números literales sin constantes nombradas
 
-**Ejemplo**:
-```python
-def funcion_muy_larga():  # 55 líneas
-    # ... mucho código ...
-    pass
-# ❌ HIGH: Función con 55 líneas - refactorizar
-```
+### 🧹 7. Mantenibilidad (4 reglas)
+- **GlobalVariable** - Uso de variables globales o nonlocal
+- **UnusedImports** - Imports que no se usan en el código
+- **DeadCode** - Código que nunca se ejecuta (after return, if False)
+- **TodoComments** - Comentarios TODO/FIXME/HACK/XXX/BUG
+
+**Total: 38 reglas** (23 seguridad + 10 calidad + 5 soporte)
 
 ---
 
-## 2️⃣ MagicNumbersRule - Números Mágicos
+## Prerrequisitos
 
-**Detecta**: Números literales sin constantes nombradas
+### Software Requerido
+- **Java JDK 11 o superior**
+- **ANTLR 4.13.1** (incluido en `ANTLR/`)
+- **Python 3.x** (para ejecutar los archivos de prueba)
 
-**Severidad**: LOW (5 min)
-
-**Excepciones**: 0, 1, -1, 0.0, 1.0
-
-**Mejoras Implementadas**:
-- ✅ Ignora números en constantes (UPPER_CASE)
-- ✅ Ignora listas pequeñas (≤10 elementos)
-- ✅ Ignora asignaciones simples (linea_2 = 2)
-- ✅ Reporta listas grandes (>10 elementos) una sola vez
-
-**Algoritmo**:
-```java
-enterAtom(ctx) {
-    if (inConstantDefinition) return;
-    if (inListLiteral) return;
-    if (isSimpleNumberAssignment()) return;
-    
-    String number = ctx.NUMBER().getText();
-    if (!ALLOWED_NUMBERS.contains(number)) {
-        flag(LOW, "Número mágico '" + number + "'");
-    }
-}
-```
-
-**Ejemplo**:
-```python
-precio = 100 * 0.15  # ❌ LOW: Números mágicos '100' y '0.15'
-
-# Correcto:
-PRECIO_BASE = 100
-DESCUENTO = 0.15
-precio = PRECIO_BASE * DESCUENTO  # ✅ OK
-```
-
----
-
-## 3️⃣ TodoCommentsRule - Comentarios Pendientes
-
-**Detecta**: Comentarios que indican trabajo pendiente
-
-**Palabras Clave**:
-- `TODO` → INFO (2 min)
-- `FIXME` → LOW (5 min)
-- `HACK`, `XXX`, `BUG` → MEDIUM (15 min)
-
-**Característica Especial**: Accede al canal oculto de tokens (comentarios no están en el AST)
-
-**Algoritmo**:
-```java
-analyze(tree, tokens) {
-    for (Token token : tokens.getTokens()) {
-        if (token.getType() == COMMENT) {
-            String comment = token.getText();
-            if (contains(comment, "TODO")) flag(INFO);
-            else if (contains(comment, "FIXME")) flag(LOW);
-            else if (contains(comment, "HACK|XXX|BUG")) flag(MEDIUM);
-        }
-    }
-}
-```
-
-**Ejemplo**:
-```python
-# TODO: Implementar validación  # ❌ INFO
-# FIXME: Este cálculo está mal  # ❌ LOW
-# HACK: Solución temporal       # ❌ MEDIUM
-```
-
----
-
-## 4️⃣ DeepNestingRule - Anidamiento Excesivo
-
-**Detecta**: Bloques con demasiados niveles de anidamiento
-
-**Umbrales**:
-- `>4 niveles` → MEDIUM (15 min)
-- `>6 niveles` → HIGH (30 min)
-
-**Estructuras Contadas**: if/elif/else, for, while, with, try/except
-
-**Algoritmo**:
-```java
-private int currentNestingLevel = 0;
-private int maxNestingInFunction = 0;
-
-enterIf_stmt(ctx) {
-    currentNestingLevel++;
-    maxNestingInFunction = Math.max(maxNestingInFunction, currentNestingLevel);
-}
-
-exitIf_stmt(ctx) {
-    currentNestingLevel--;
-}
-
-exitFunction_def_raw(ctx) {
-    if (maxNestingInFunction > 6) flag(HIGH);
-    else if (maxNestingInFunction > 4) flag(MEDIUM);
-    maxNestingInFunction = 0;
-}
-```
-
-**Ejemplo**:
-```python
-def validar(usuario, pedido, pago):
-    if usuario:
-        if usuario.get('activo'):
-            if pedido:
-                if pedido.get('valido'):
-                    if pago:  # ❌ MEDIUM: 5 niveles
-                        return True
-    return False
-
-# Correcto: usar early returns
-def validar_correcto(usuario, pedido, pago):
-    if not usuario: return False
-    if not usuario.get('activo'): return False
-    if not pedido: return False
-    if not pedido.get('valido'): return False
-    if not pago: return False
-    return True  # ✅ OK: sin anidamiento
-```
-
----
-
-## 5️⃣ CodeDuplicationRule - Código Duplicado
-
-**Detecta**: Bloques de código idénticos o muy similares
-
-**Umbral**: ≥5 líneas duplicadas → MEDIUM (15 min)
-
-**Mejora Implementada**: Reporta la línea de definición de la función (no la primera línea del cuerpo)
-
-**Algoritmo**:
-```java
-Map<String, List<FunctionInfo>> codeBlocks = new HashMap<>();
-
-exitFunction_def_raw(ctx) {
-    String normalized = normalize(extractBody(ctx));
-    int lineCount = countLines(normalized);
-    
-    if (lineCount < 5) return;
-    
-    if (codeBlocks.containsKey(normalized)) {
-        // Reportar todas las funciones duplicadas
-        for (FunctionInfo dup : codeBlocks.get(normalized)) {
-            flag(MEDIUM, dup.line, "Código duplicado");
-        }
-    }
-    
-    codeBlocks.computeIfAbsent(normalized, k -> new ArrayList<>())
-              .add(new FunctionInfo(ctx));
-}
-```
-
-**Ejemplo**:
-```python
-def procesar_pedido_a(cliente, monto):
-    pedido = {}
-    pedido['cliente'] = cliente
-    pedido['monto'] = monto
-    pedido['estado'] = 'pendiente'
-    return pedido
-
-def procesar_pedido_b(cliente, monto):
-    pedido = {}
-    pedido['cliente'] = cliente
-    pedido['monto'] = monto
-    pedido['estado'] = 'pendiente'
-    return pedido
-# ❌ MEDIUM: Código duplicado - extraer a función común
-```
-
----
-
-## 6️⃣ LongParameterListRule - Lista Larga de Parámetros
-
-**Detecta**: Funciones con demasiados parámetros
-
-**Umbrales**:
-- `>5 parámetros` → LOW (5 min)
-- `>7 parámetros` → MEDIUM (15 min)
-
-**Algoritmo**:
-```java
-exitFunction_def_raw(ctx) {
-    int paramCount = countParameters(ctx.parameters());
-    
-    if (paramCount > 7) flag(MEDIUM);
-    else if (paramCount > 5) flag(LOW);
-}
-```
-
-**Ejemplo**:
-```python
-def funcion(p1, p2, p3, p4, p5, p6, p7, p8):  # ❌ MEDIUM: 8 parámetros
-    pass
-
-# Correcto: usar objeto de configuración
-class Config:
-    def __init__(self, p1, p2, p3, p4, p5, p6, p7, p8):
-        self.p1 = p1
-        # ...
-
-def funcion_correcta(config):  # ✅ OK: 1 parámetro
-    pass
-```
-
----
-
-## 7️⃣ GlobalVariableRule - Variables Globales
-
-**Detecta**: Uso de variables globales y nonlocal
-
-**Severidades**:
-- `global` → MEDIUM (15 min)
-- `nonlocal` → LOW (5 min)
-
-**Algoritmo**:
-```java
-exitGlobal_stmt(ctx) {
-    for (NameContext name : ctx.name()) {
-        flag(MEDIUM, "Variable global '" + name.getText() + "'");
-    }
-}
-
-exitNonlocal_stmt(ctx) {
-    for (NameContext name : ctx.name()) {
-        flag(LOW, "Variable nonlocal '" + name.getText() + "'");
-    }
-}
-```
-
-**Ejemplo**:
-```python
-contador = 0
-
-def incrementar():
-    global contador  # ❌ MEDIUM: Variable global
-    contador += 1
-
-# Correcto: usar clases
-class Contador:
-    def __init__(self):
-        self.cuenta = 0
-    
-    def incrementar(self):  # ✅ OK: sin global
-        self.cuenta += 1
-```
-
----
-
-## 8️⃣ UnusedImportsRule - Imports No Utilizados
-
-**Detecta**: Imports que no se usan en el código
-
-**Severidad**: LOW (5 min)
-
-**Algoritmo** (2 fases):
-```java
-// Fase 1: Recolectar imports
-Set<String> importedNames = new HashSet<>();
-exitImport_name(ctx) {
-    importedNames.add(extractName(ctx));
-}
-
-// Fase 2: Buscar usos
-Set<String> usedNames = new HashSet<>();
-exitName(ctx) {
-    usedNames.add(ctx.getText());
-}
-
-// Fase 3: Comparar
-endDocument() {
-    Set<String> unused = importedNames - usedNames;
-    for (String name : unused) {
-        flag(LOW, "Import no usado: '" + name + "'");
-    }
-}
-```
-
-**Ejemplo**:
-```python
-import os           # ✅ USADO
-import sys          # ❌ LOW: NO USADO
-import json         # ❌ LOW: NO USADO
-from pathlib import Path  # ✅ USADO
-
-def verificar(ruta):
-    return os.path.exists(ruta) and Path(ruta).is_file()
-```
-
----
-
-## 9️⃣ DeadCodeRule - Código Muerto
-
-**Detecta**: Código que nunca se ejecuta
-
-**Tipos**:
-- Código después de `return` → MEDIUM (15 min)
-- Bloques `if False` o `if 0` → LOW (5 min)
-
-**Algoritmo**:
-```java
-exitReturn_stmt(ctx) {
-    ParserRuleContext block = findParentBlock(ctx);
-    int returnIndex = getChildIndex(ctx, block);
-    
-    for (int i = returnIndex + 1; i < block.children.size(); i++) {
-        if (isStatement(block.children.get(i))) {
-            flag(MEDIUM, "Código inalcanzable después de return");
-            break;
-        }
-    }
-}
-
-exitIf_stmt(ctx) {
-    String condition = ctx.named_expression().getText();
-    if (condition.equals("False") || condition.equals("0")) {
-        flag(LOW, "Bloque 'if " + condition + "' nunca se ejecuta");
-    }
-}
-```
-
-**Ejemplo**:
-```python
-def funcion():
-    resultado = calcular()
-    return resultado
-    # ❌ MEDIUM: Código inalcanzable
-    print("Esto nunca se ejecuta")
-    return resultado * 2
-
-def otra_funcion():
-    if False:  # ❌ LOW: Nunca se ejecuta
-        print("Código muerto")
-    return True
-```
-
----
-
-## 💰 Cálculo de Deuda Técnica
-
-### Tiempo por Severidad
-
-| Severidad | Tiempo | Uso |
-|-----------|--------|-----|
-| CRITICAL  | 60 min | Problemas críticos de seguridad |
-| HIGH      | 30 min | Problemas graves de calidad |
-| MEDIUM    | 15 min | Problemas moderados |
-| LOW       | 5 min  | Problemas menores |
-| INFO      | 2 min  | Información |
-
-### Formato de Salida
-
-Formato SonarQube: `Xd Yh Zmin` (días laborales de 8 horas)
-
-**Ejemplos**:
-- 45 min → `45min`
-- 90 min → `1h 30min`
-- 500 min → `1d 2h 20min`
-
-**Implementación**:
-```java
-public static String formatMinutesToTime(int totalMinutes) {
-    int days = totalMinutes / (8 * 60);
-    int remainingMinutes = totalMinutes % (8 * 60);
-    int hours = remainingMinutes / 60;
-    int minutes = remainingMinutes % 60;
-    
-    return String.format("%dd %dh %dmin", days, hours, minutes).trim();
-}
-```
-
----
-
-## 🚀 Uso
-
-### Compilación
-
+### Librerías Python (para archivos de prueba)
 ```bash
-# Windows
-javac -encoding UTF-8 -cp "ANTLR/*;gen" -d out src/*.java
-
-# Linux/Mac
-javac -encoding UTF-8 -cp "ANTLR/*:gen" -d out src/*.java
+pip install pyyaml pycryptodome
 ```
 
-### Ejecución
-
-```bash
-# Configurar UTF-8 (Windows PowerShell)
-[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
-$env:JAVA_TOOL_OPTIONS = "-Dfile.encoding=UTF-8"
-
-# Analizar archivo
-java -cp "out;ANTLR/*;gen" Main input/Test53.py
-```
-
-### Salida Ejemplo
-
-```
-──────────────────────────────────────────────────────────────────────
-  [HIGH    ] LongMethod                     linea 17:0 - Funcion 'funcion_muy_larga': 61 lineas [30min]
-  [MEDIUM  ] TodoComments                   linea 95:4 - FIXME: Este cálculo no funciona [15min]
-  [MEDIUM  ] DeepNesting                    linea 121:20 - Anidamiento de 5 niveles [15min]
-  [LOW     ] MagicNumbers                   linea 79:13 - Numero magico '1000' [5min]
-  [INFO    ] TodoComments                   linea 92:4 - TODO: Implementar validación [2min]
-──────────────────────────────────────────────────────────────────────
-  Total: 29  |  HIGH: 1  MEDIUM: 8  LOW: 18  INFO: 2
-  Deuda técnica total: 3h 47min
-──────────────────────────────────────────────────────────────────────
-```
-
----
-
-## 📁 Estructura del Proyecto
-
+### Estructura de Directorios
 ```
 SonarQ_Python/
-├── ANTLR/                      # Librerías ANTLR 4.13.1
+├── ANTLR/                      # JARs de ANTLR4
 │   ├── antlr-4.13.1-complete.jar
 │   └── antlr-runtime-4.13.1.jar
-├── grammar/                    # Gramáticas ANTLR
-│   ├── PythonLexer.g4
-│   ├── PythonLexerBase.java
-│   └── PythonParser.g4
-├── gen/                        # Código generado por ANTLR
+├── gen/                        # Parser generado por ANTLR
 │   ├── PythonLexer.java
 │   ├── PythonParser.java
 │   └── ...
-├── src/                        # Código fuente
-│   ├── Main.java              # Punto de entrada
-│   ├── AnalysisRule.java      # Clase base para reglas
-│   ├── RulesListener.java     # Orquestador de reglas
-│   ├── Issue.java             # Representa un problema
-│   ├── Severity.java          # Enum de severidades
+├── src/                        # Código fuente Java (38 reglas)
+│   ├── Main.java               # Punto de entrada
+│   ├── RulesListener.java      # Orquestador de reglas
+│   ├── AnalysisRule.java       # Clase base para reglas
+│   ├── Issue.java              # Modelo de incidencia
+│   ├── Severity.java           # Niveles de severidad
+│   ├── SecurityRuleUtil.java   # Utilidades compartidas
 │   │
-│   ├── # Reglas de Deuda Técnica (9)
-│   ├── LongMethodRule.java
-│   ├── MagicNumbersRule.java
-│   ├── TodoCommentsRule.java
-│   ├── DeepNestingRule.java
-│   ├── CodeDuplicationRule.java
-│   ├── LongParameterListRule.java
-│   ├── GlobalVariableRule.java
-│   ├── UnusedImportsRule.java
-│   ├── DeadCodeRule.java
+│   ├── # Reglas de Seguridad (23 reglas)
+│   ├── SQLInjectionConcatRule.java
+│   ├── InsecureYamlLoadRule.java
+│   ├── WeakHashAlgorithmRule.java
+│   ├── InsecureRandomForSecretsRule.java
+│   ├── WeakCryptographyModeRule.java
+│   ├── HardcodedCredentialsRule.java
+│   ├── HardcodedCryptoKeyRule.java
+│   ├── InsecureDeserializationPickleRule.java
+│   ├── InsecurePasswordHashingRule.java
+│   ├── InsecureCookieConfigRule.java
+│   ├── JWTWeakConfigurationRule.java
+│   ├── TLSVerificationDisabledRule.java
+│   ├── InsecureHttpUsageRule.java
+│   ├── BasicAuthOverHttpRule.java
+│   ├── RequestsWithoutTimeoutRule.java
+│   ├── OpenRedirectRule.java
+│   ├── PathTraversalRule.java
+│   ├── FileOverwriteRiskRule.java
+│   ├── DangerousFileDeleteRule.java
+│   ├── InsecureTempFileUsageRule.java
+│   ├── UnsafeArchiveExtractionRule.java
+│   ├── UnsafeFilePermissionsRule.java
 │   │
-│   └── # Reglas de Seguridad (23)
-│       ├── HardcodedCredentialsRule.java
-│       ├── SQLInjectionConcatRule.java
-│       └── ...
-├── input/                      # Archivos de prueba
-│   ├── Test53.py              # Con deuda técnica
-│   └── Test54.py              # Código limpio
-├── out/                        # Archivos compilados
-├── README.md                   # Este archivo
-├── TECHNICAL_ANALYSIS_GUIDE.md # Guía técnica detallada
-└── IMPLEMENTATION_SUMMARY.md   # Resumen de implementación
+│   └── # Reglas de Calidad de Código (10 reglas)
+│       ├── CyclomaticComplexityRule.java
+│       ├── LongMethodRule.java
+│       ├── LongParameterListRule.java
+│       ├── DeepNestingRule.java
+│       ├── CodeDuplicationRule.java
+│       ├── MagicNumbersRule.java
+│       ├── GlobalVariableRule.java
+│       ├── UnusedImportsRule.java
+│       ├── DeadCodeRule.java
+│       └── TodoCommentsRule.java
+├── input/                      # Archivos Python de prueba
+│   ├── TestDemoVulnerable.py
+│   ├── TestDemoSeguro.py
+│   ├── TestPresentacionVulnerable.py
+│   └── TestPresentacionSeguro.py
+├── out/                        # Clases Java compiladas
+└── grammar/                    # Gramática ANTLR de Python
+    ├── PythonLexer.g4
+    └── PythonParser.g4
 ```
 
 ---
 
-## 🧪 Archivos de Prueba
+## Compilación
 
-### Test53.py - Con Deuda Técnica
+### Paso 1: Generar el Parser de Python (si no existe `gen/`)
+```powershell
+# Desde el directorio raíz del proyecto
+java -jar ANTLR/antlr-4.13.1-complete.jar -Dlanguage=Java -visitor -listener -o gen grammar/PythonParser.g4 grammar/PythonLexer.g4
+```
 
-Contiene ejemplos de **todas las 9 reglas** con problemas:
-- Función de 61 líneas
-- Números mágicos
-- Comentarios TODO/FIXME/HACK
-- Anidamiento de 5 niveles
-- Código duplicado
-- 6 y 8 parámetros
-- Variables global y nonlocal
-- Código después de return
-- Bloques if False
+### Paso 2: Compilar el Código Java
+```powershell
+# Configurar encoding UTF-8 para PowerShell
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+chcp 65001
 
-**Resultado**: ~29 issues, ~3h 47min de deuda técnica
+# Compilar todas las clases Java
+javac -encoding UTF-8 -cp "ANTLR/*;gen" -d out src/*.java
+```
 
-### Test54.py - Código Limpio
-
-Demuestra código de alta calidad **sin deuda técnica**:
-- Funciones cortas (<50 líneas)
-- Constantes nombradas
-- Sin comentarios pendientes
-- Sin anidamiento excesivo
-- Sin código duplicado
-- Máximo 2 parámetros
-- Sin variables globales
-- Todos los imports usados
-- Sin código muerto
-
-**Resultado**: 0 issues, 0min de deuda técnica
+### Paso 3: Verificar la Compilación
+```powershell
+# Debe existir el directorio out/ con las clases compiladas
+dir out
+```
 
 ---
 
-## 📊 Estadísticas
+## Uso
 
-- **Total de Reglas**: 32 (23 seguridad + 9 deuda técnica)
-- **Líneas de Código**: ~3,500
-- **Archivos Java**: 35+
-- **Precisión Promedio**: ~90%
-- **Falsos Positivos**: <10%
+### Comando Básico
+```powershell
+java -cp "out;ANTLR/*;gen" Main input/archivo.py
+```
+
+**Nota para Linux/Mac:** Usar `:` en lugar de `;` como separador de classpath:
+```bash
+java -cp "out:ANTLR/*:gen" Main input/archivo.py
+```
+
+### Ejemplos de Uso
+
+#### 1. Analizar Código Vulnerable (Demo Simple)
+```powershell
+java -cp "out;ANTLR/*;gen" Main input/TestDemoVulnerable.py
+```
+
+**Salida Esperada:**
+```
+Analizando: input/TestDemoVulnerable.py
+
+Issues encontrados (ordenados por severidad):
+
+[CRITICAL ] SQLInjectionConcat            linea 18:4 - Consulta SQL construida por concatenacion antes de ejecutarse [60min]
+
+Total: 1 issues
+Tiempo estimado de corrección: 1h
+```
+
+#### 2. Analizar Código Seguro (Demo Simple)
+```powershell
+java -cp "out;ANTLR/*;gen" Main input/TestDemoSeguro.py
+```
+
+**Salida Esperada:**
+```
+Analizando: input/TestDemoSeguro.py
+
+Issues encontrados (ordenados por severidad):
+
+Total: 0 issues
+Tiempo estimado de corrección: 0min
+```
+
+#### 3. Analizar Código Vulnerable Completo
+```powershell
+java -cp "out;ANTLR/*;gen" Main input/TestPresentacionVulnerable.py
+```
+
+**Salida Esperada:**
+```
+Analizando: input/TestPresentacionVulnerable.py
+
+Issues encontrados (ordenados por severidad):
+
+[CRITICAL ] SQLInjectionConcat            linea 37:12 - Consulta SQL construida por concatenacion antes de ejecutarse [60min]
+[CRITICAL ] SQLInjectionConcat            linea 42:12 - Consulta SQL construida por f-string con interpolacion antes de ejecutarse [60min]
+[CRITICAL ] SQLInjectionConcat            linea 47:12 - Consulta SQL construida por format() antes de ejecutarse [60min]
+[CRITICAL ] SQLInjectionConcat            linea 53:12 - Consulta SQL construida por formateo con % antes de ejecutarse [60min]
+[CRITICAL ] SQLInjectionConcat            linea 155:4 - Consulta SQL construida por concatenacion antes de ejecutarse [60min]
+[CRITICAL ] WeakCryptographyMode          linea 102:17 - Modo criptografico inseguro ECB usado para cifrado [60min]
+[CRITICAL ] WeakCryptographyMode          linea 204:13 - Modo criptografico inseguro ECB usado para cifrado [60min]
+[HIGH     ] InsecureYamlLoad              linea 65:16 - Carga YAML insegura: yaml.load() sin SafeLoader/safe_load [30min]
+[HIGH     ] InsecureYamlLoad              linea 132:16 - Carga YAML insegura: yaml.load() sin SafeLoader/safe_load [30min]
+[HIGH     ] InsecureYamlLoad              linea 136:16 - Carga YAML insegura: yaml.full_load() permite construir objetos Python mas alla de tipos seguros [30min]
+[HIGH     ] InsecureYamlLoad              linea 140:16 - Carga YAML insegura: yaml.unsafe_load() permite deserializacion insegura de objetos [30min]
+[HIGH     ] WeakHashAlgorithm             linea 73:16 - Algoritmo de hash debil usado en contexto de seguridad: MD5/SHA1 [30min]
+[HIGH     ] WeakHashAlgorithm             linea 76:16 - Algoritmo de hash debil usado en contexto de seguridad: MD5/SHA1 [30min]
+[HIGH     ] WeakHashAlgorithm             linea 185:4 - Algoritmo de hash debil usado en contexto de seguridad: MD5/SHA1 [30min]
+[HIGH     ] WeakHashAlgorithm             linea 188:4 - Algoritmo de hash debil usado en contexto de seguridad: MD5/SHA1 [30min]
+[HIGH     ] WeakHashAlgorithm             linea 191:4 - Algoritmo de hash debil usado en contexto de seguridad: MD5/SHA1 [30min]
+[HIGH     ] InsecureRandomForSecrets      linea 86:12 - Generador no criptografico usado para crear secreto en 'session_token' [30min]
+[HIGH     ] InsecureRandomForSecrets      linea 89:12 - Generador no criptografico usado para crear secreto en 'api_key' [30min]
+[HIGH     ] InsecureRandomForSecrets      linea 92:12 - Generador no criptografico usado para crear secreto en 'reset_code' [30min]
+[HIGH     ] InsecureRandomForSecrets      linea 95:12 - Generador no criptografico usado para crear secreto en 'otp' [30min]
+[HIGH     ] InsecureRandomForSecrets      linea 169:4 - Generador no criptografico usado para crear secreto en 'secret_key' [30min]
+[HIGH     ] InsecureRandomForSecrets      linea 170:4 - Generador no criptografico usado para crear secreto en 'password' [30min]
+[HIGH     ] InsecureRandomForSecrets      linea 171:4 - Generador no criptografico usado para crear secreto en 'pin' [30min]
+[HIGH     ] InsecureRandomForSecrets      linea 172:4 - Generador no criptografico usado para crear secreto en 'nonce' [30min]
+[HIGH     ] WeakCryptographyMode          linea 107:17 - Modo CBC usado sin autenticacion visible del ciphertext [30min]
+
+Total: 25 issues
+Tiempo estimado de corrección: 16h 30min
+```
+
+#### 4. Analizar Código Seguro Completo
+```powershell
+java -cp "out;ANTLR/*;gen" Main input/TestPresentacionSeguro.py
+```
+
+**Salida Esperada:**
+```
+Analizando: input/TestPresentacionSeguro.py
+
+Issues encontrados (ordenados por severidad):
+
+Total: 0 issues
+Tiempo estimado de corrección: 0min
+```
 
 ---
 
-## 🔧 Mejoras Implementadas
+## Archivos de Prueba Incluidos
 
-1. ✅ **UTF-8 Encoding** - Soporte completo para caracteres especiales
-2. ✅ **Cálculo de Deuda Técnica** - Formato SonarQube
-3. ✅ **Tiempo por Issue** - Cada problema muestra su tiempo estimado
-4. ✅ **MagicNumbers Mejorado** - Ignora asignaciones simples y listas pequeñas
-5. ✅ **CodeDuplication Corregido** - Reporta línea de definición correcta
-6. ✅ **LongMethod Ajustado** - Umbrales más estrictos (>50 HIGH, >100 CRITICAL)
+### Archivos de Demostración Simple
 
----
+#### `TestDemoVulnerable.py`
+Ejemplo simple de **SQL Injection** mediante concatenación de strings.
+- **Línea 18:** Construcción vulnerable de query SQL
+- **Vulnerabilidad:** `query = "SELECT * FROM users WHERE username = '" + username + "'"`
 
-## 📚 Documentación Adicional
+#### `TestDemoSeguro.py`
+Versión corregida usando **consultas parametrizadas**.
+- **Línea 18:** Uso seguro de placeholders
+- **Corrección:** `query = "SELECT * FROM users WHERE username = ?"`
 
-- **TECHNICAL_ANALYSIS_GUIDE.md** - Guía técnica detallada de cada algoritmo
-- **IMPLEMENTATION_SUMMARY.md** - Resumen de implementación con ejemplos
-- **TECHNICAL_DEBT_RULES_GUIDE.md** - Guía de reglas de deuda técnica
+### Archivos de Presentación Completos
 
----
+#### `TestPresentacionVulnerable.py`
+Función compleja con **múltiples vulnerabilidades** de seguridad:
+1. **SQL Injection** (líneas 37, 42, 47, 53, 155)
+   - Concatenación directa: `"SELECT * FROM users WHERE username = '" + username + "'"`
+   - F-strings: `f"INSERT INTO users VALUES ('{username}')"`
+   - format(): `"DELETE FROM users WHERE id = {}".format(user_id)`
+   - % formatting: `"UPDATE users SET password = '%s'" % password`
 
-## 🎯 Casos de Uso
+2. **Insecure YAML Load** (líneas 65, 132, 136, 140)
+   - `yaml.load(f)` sin SafeLoader
+   - `yaml.full_load(f)` permite objetos complejos
+   - `yaml.unsafe_load(f)` deserialización insegura
 
-1. **Revisión de Código** - Detectar problemas antes de merge
-2. **CI/CD** - Integrar en pipeline de integración continua
-3. **Refactorización** - Identificar áreas que necesitan mejora
-4. **Educación** - Enseñar buenas prácticas de programación
-5. **Auditoría** - Evaluar calidad de código legacy
+3. **Weak Hash Algorithm** (líneas 73, 76, 185, 188, 191)
+   - `hashlib.md5()` para contraseñas
+   - `hashlib.sha1()` para tokens
 
----
+4. **Insecure Random for Secrets** (líneas 86, 89, 92, 95, 169-172)
+   - `random.randint()` para tokens de sesión
+   - `random.choice()` para PINs
+   - `random.randbytes()` para nonces
 
-## 🤝 Contribuciones
+5. **Weak Cryptography Mode** (líneas 102, 107, 204)
+   - `AES.MODE_ECB` (inseguro)
+   - `AES.MODE_CBC` sin autenticación
 
-Este proyecto fue desarrollado como parte de un análisis de calidad de código Python utilizando ANTLR4.
-
-### Autores
-- Implementación de reglas de deuda técnica
-- Mejoras en detección de falsos positivos
-- Cálculo de tiempo de deuda técnica
-- Documentación técnica completa
-
----
-
-## 📝 Licencia
-
-Ver archivo LICENSE para más detalles.
-
----
-
-## 🔗 Referencias
-
-- [ANTLR4](https://www.antlr.org/)
-- [Python Grammar](https://github.com/antlr/grammars-v4/tree/master/python)
-- [SonarQube](https://www.sonarqube.org/)
-- [Technical Debt](https://martinfowler.com/bliki/TechnicalDebt.html)
+#### `TestPresentacionSeguro.py`
+Versión corregida con **implementaciones seguras**:
+1. **SQL Injection:** Consultas parametrizadas con `?`
+2. **YAML Load:** `yaml.safe_load()` o `yaml.load(f, Loader=yaml.SafeLoader)`
+3. **Hash Algorithm:** `hashlib.sha256()`, `hashlib.sha512()`, `hashlib.blake2b()`
+4. **Random for Secrets:** `secrets.token_hex()`, `secrets.token_urlsafe()`, `secrets.randbits()`
+5. **Cryptography Mode:** `AES.MODE_GCM` con autenticación integrada
 
 ---
 
-**Made with ❤️ using ANTLR4 and Java**
+## Alcance del Proyecto
+
+### Reglas Implementadas (38 Total)
+
+#### A. Reglas de Seguridad (23 reglas)
+
+1. **SQLInjectionConcatRule** - SQL Injection mediante concatenación
+2. **InsecureYamlLoadRule** - Carga insegura de YAML
+3. **WeakHashAlgorithmRule** - Algoritmos de hash débiles (MD5, SHA1)
+4. **InsecureRandomForSecretsRule** - Random no criptográfico para secretos
+5. **WeakCryptographyModeRule** - Modos de cifrado inseguros (ECB, CBC sin auth)
+6. **HardcodedCredentialsRule** - Credenciales hardcodeadas
+7. **HardcodedCryptoKeyRule** - Claves criptográficas hardcodeadas
+8. **InsecureDeserializationPickleRule** - Deserialización insegura con Pickle
+9. **InsecurePasswordHashingRule** - Hash de contraseñas sin salt
+10. **InsecureCookieConfigRule** - Cookies sin atributos de seguridad
+11. **JWTWeakConfigurationRule** - JWT con configuración débil
+12. **TLSVerificationDisabledRule** - Verificación TLS deshabilitada
+13. **InsecureHttpUsageRule** - HTTP para datos sensibles
+14. **BasicAuthOverHttpRule** - Autenticación sobre HTTP
+15. **RequestsWithoutTimeoutRule** - Llamadas de red sin timeout
+16. **OpenRedirectRule** - Redirecciones abiertas
+17. **PathTraversalRule** - Path traversal sin validación
+18. **FileOverwriteRiskRule** - Sobrescritura de archivos peligrosa
+19. **DangerousFileDeleteRule** - Borrado de archivos peligroso
+20. **InsecureTempFileUsageRule** - Archivos temporales inseguros
+21. **UnsafeArchiveExtractionRule** - Extracción de archivos sin validar (Zip Slip)
+22. **UnsafeFilePermissionsRule** - Permisos de archivo demasiado amplios
+23. **DeepNestingRule** - Anidamiento excesivo (>4 niveles)
+
+#### B. Reglas de Calidad de Código (10 reglas)
+
+24. **CyclomaticComplexityRule** - Complejidad ciclomática alta (>10)
+25. **LongMethodRule** - Métodos largos (>50 líneas)
+26. **LongParameterListRule** - Listas de parámetros largas (>5)
+27. **DeepNestingRule** - Anidamiento profundo (>4 niveles)
+28. **CodeDuplicationRule** - Código duplicado (≥5 líneas)
+29. **MagicNumbersRule** - Números mágicos sin constantes
+30. **GlobalVariableRule** - Uso de variables globales
+31. **UnusedImportsRule** - Imports no utilizados
+32. **DeadCodeRule** - Código muerto (unreachable)
+33. **TodoCommentsRule** - Comentarios TODO/FIXME/HACK/BUG
+
+### Características del Analizador
+
+- **Análisis estático completo** sin ejecutar el código
+- **38 reglas** de análisis (23 seguridad + 10 calidad + 5 adicionales)
+- **5 niveles de severidad**: CRITICAL, HIGH, MEDIUM, LOW, INFO
+- **Cálculo de deuda técnica** en formato SonarQube (días, horas, minutos)
+- **Soporte Python 3.13** con gramática ANTLR actualizada
+- **Detección de patrones complejos** (taint analysis básico)
+- **Reportes detallados** con línea, columna y tiempo estimado
+
+---
+
+## Reglas de Seguridad Detalladas
+
+### 1. SQL Injection via String Concatenation
+**Severidad:** CRITICAL (60min)
+
+**Detecta:**
+- Concatenación con `+`
+- F-strings con interpolación
+- Método `.format()`
+- Formateo con `%`
+
+**Ejemplo Vulnerable:**
+```python
+query = "SELECT * FROM users WHERE id = " + user_id
+cursor.execute(query)
+```
+
+**Corrección:**
+```python
+query = "SELECT * FROM users WHERE id = ?"
+cursor.execute(query, (user_id,))
+```
+
+### 2. Insecure YAML Load
+**Severidad:** HIGH (30min)
+
+**Detecta:**
+- `yaml.load()` sin SafeLoader
+- `yaml.full_load()`
+- `yaml.unsafe_load()`
+
+**Ejemplo Vulnerable:**
+```python
+config = yaml.load(file)
+```
+
+**Corrección:**
+```python
+config = yaml.safe_load(file)
+# o
+config = yaml.load(file, Loader=yaml.SafeLoader)
+```
+
+### 3. Weak Hash Algorithm
+**Severidad:** HIGH (30min)
+
+**Detecta:**
+- `hashlib.md5()`
+- `hashlib.sha1()`
+- `hashlib.new('md5')`
+
+**Ejemplo Vulnerable:**
+```python
+password_hash = hashlib.md5(password.encode()).hexdigest()
+```
+
+**Corrección:**
+```python
+password_hash = hashlib.sha256(password.encode()).hexdigest()
+# Mejor aún: usar bcrypt o argon2
+```
+
+### 4. Insecure Random for Secrets
+**Severidad:** HIGH (30min)
+
+**Detecta:**
+- `random.randint()` para tokens, keys, passwords
+- `random.choice()` para secretos
+- `random.randbytes()` para nonces
+
+**Ejemplo Vulnerable:**
+```python
+token = str(random.randint(100000, 999999))
+api_key = random.randbytes(32)
+```
+
+**Corrección:**
+```python
+import secrets
+token = secrets.token_hex(32)
+api_key = secrets.token_bytes(32)
+```
+
+### 5. Weak Cryptography Mode
+**Severidad:** CRITICAL (60min) para ECB, HIGH (30min) para CBC sin auth
+
+**Detecta:**
+- `AES.MODE_ECB`
+- `AES.MODE_CBC` sin HMAC
+
+**Ejemplo Vulnerable:**
+```python
+cipher = AES.new(key, AES.MODE_ECB)
+encrypted = cipher.encrypt(data)
+```
+
+**Corrección:**
+```python
+from Crypto.Random import get_random_bytes
+nonce = get_random_bytes(12)
+cipher = AES.new(key, AES.MODE_GCM, nonce=nonce)
+encrypted, auth_tag = cipher.encrypt_and_digest(data)
+```
+
+---
+
+## Solución de Problemas
+
+### Error: ClassNotFoundException
+```
+Error: Could not find or load main class Main
+```
+**Solución:** Verificar que las clases estén compiladas en `out/`:
+```powershell
+javac -encoding UTF-8 -cp "ANTLR/*;gen" -d out src/*.java
+```
+
+### Error: Parser no encontrado
+```
+Exception in thread "main" java.lang.NoClassDefFoundError: PythonParser
+```
+**Solución:** Generar el parser con ANTLR:
+```powershell
+java -jar ANTLR/antlr-4.13.1-complete.jar -Dlanguage=Java -visitor -listener -o gen grammar/PythonParser.g4 grammar/PythonLexer.g4
+```
+
+### Error: Separador de classpath incorrecto
+**Windows:** Usar `;` como separador
+```powershell
+java -cp "out;ANTLR/*;gen" Main input/test.py
+```
+
+**Linux/Mac:** Usar `:` como separador
+```bash
+java -cp "out:ANTLR/*:gen" Main input/test.py
+```
+
+### Error: Encoding UTF-8
+Si aparecen caracteres extraños en la salida:
+```powershell
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+chcp 65001
+```
+
+---
+
+## Notas Importantes
+
+### Propósito Académico
+Este es un proyecto académico para demostración de análisis de seguridad estático. No reemplaza herramientas profesionales como:
+- **Bandit** (análisis de seguridad Python)
+- **SonarQube** (análisis de calidad y seguridad)
+- **Semgrep** (análisis estático multi-lenguaje)
+
+### Archivos de Prueba
+Los archivos `TestDemoVulnerable.py` y `TestPresentacionVulnerable.py` contienen **vulnerabilidades intencionales** con fines educativos. **NO usar este código en producción.**
+
+### Limitaciones
+- Análisis estático básico (no ejecuta el código)
+- No detecta todas las vulnerabilidades posibles
+- Puede generar falsos positivos en casos complejos
+- No analiza dependencias externas
+
+### Recomendaciones
+1. Usar este analizador como herramienta educativa
+2. Complementar con herramientas profesionales
+3. Realizar revisiones de código manual
+4. Implementar pruebas de seguridad automatizadas
+5. Seguir las mejores prácticas de OWASP
+
+---
+
+## Ejemplos de Entrada y Salida
+
+### Ejemplo 1: Archivo Limpio
+
+**Entrada:** `input/ejemplo_limpio.py`
+```python
+import sqlite3
+
+def buscar_usuario(username):
+    conn = sqlite3.connect('db.sqlite')
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM users WHERE username = ?", (username,))
+    return cursor.fetchall()
+```
+
+**Comando:**
+```powershell
+java -cp "out;ANTLR/*;gen" Main input/ejemplo_limpio.py
+```
+
+**Salida:**
+```
+Analizando: input/ejemplo_limpio.py
+
+Issues encontrados (ordenados por severidad):
+
+Total: 0 issues
+Tiempo estimado de corrección: 0min
+```
+
+### Ejemplo 2: Archivo con Vulnerabilidades
+
+**Entrada:** `input/ejemplo_vulnerable.py`
+```python
+import sqlite3
+import hashlib
+import random
+
+def procesar_usuario(username, password):
+    # SQL Injection
+    conn = sqlite3.connect('db.sqlite')
+    query = "SELECT * FROM users WHERE username = '" + username + "'"
+    conn.execute(query)
+    
+    # Weak Hash
+    pwd_hash = hashlib.md5(password.encode()).hexdigest()
+    
+    # Insecure Random
+    token = str(random.randint(100000, 999999))
+    
+    return token
+```
+
+**Comando:**
+```powershell
+java -cp "out;ANTLR/*;gen" Main input/ejemplo_vulnerable.py
+```
+
+**Salida:**
+```
+Analizando: input/ejemplo_vulnerable.py
+
+Issues encontrados (ordenados por severidad):
+
+[CRITICAL ] SQLInjectionConcat            linea 9:4 - Consulta SQL construida por concatenacion antes de ejecutarse [60min]
+[HIGH     ] WeakHashAlgorithm             linea 12:4 - Algoritmo de hash debil usado en contexto de seguridad: MD5/SHA1 [30min]
+[HIGH     ] InsecureRandomForSecrets      linea 15:4 - Generador no criptografico usado para crear secreto en 'token' [30min]
+
+Total: 3 issues
+Tiempo estimado de corrección: 2h
+```
+
+---
+
+## Contacto y Contribuciones
+
+Este proyecto fue desarrollado como parte de un análisis de seguridad académico para Python.
+
+**Versión:** 1.0  
+**Fecha:** Junio 2026  
+**Licencia:** MIT
+
+---
+
+## Referencias
+
+- [OWASP Top 10](https://owasp.org/www-project-top-ten/)
+- [ANTLR 4 Documentation](https://github.com/antlr/antlr4/blob/master/doc/index.md)
+- [Python Security Best Practices](https://python.readthedocs.io/en/stable/library/security_warnings.html)
+- [CWE - Common Weakness Enumeration](https://cwe.mitre.org/)

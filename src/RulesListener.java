@@ -40,7 +40,6 @@ public class RulesListener {
             new LongMethodRule(),
             new MagicNumbersRule(),
             new TodoCommentsRule(),
-            new DeepNestingRule(),
             new CodeDuplicationRule(),
             new LongParameterListRule(),
             new GlobalVariableRule(),
